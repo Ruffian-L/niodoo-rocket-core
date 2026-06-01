@@ -17,9 +17,9 @@ When this loop is real, observable, and produces numbers on a hard problem, the 
 2. **Corrections are applied** during the run (from user, stronger model, or self-generated via tags) and are turned into mistake-reflex events.
 
 3. **Durable dual-write occurs**:
-   - JSONL file written as human-readable, git-trackable audit trail (source of truth).
-   - Qdrant collection receives the same events (feature-gated `--features qdrant`).
-   - The events are queryable by the runtime on subsequent launches.
+   - JSONL written inside `ledgers/` (git-tracked, watcher-protected, never in /tmp) as the human-readable source of truth.
+   - Qdrant (your real stack on 6360) receives the same events when the transport cooperates.
+   - The events are loadable by a fresh process after full context death.
 
 4. **Full context death**:
    - The process is deliberately killed (not graceful shutdown with warm state).
@@ -44,13 +44,15 @@ When this loop is real, observable, and produces numbers on a hard problem, the 
 
 ## What Counts as "Evidence" (Strict)
 
-- Raw `telemetry.jsonl` + `stdout.txt` + `stderr.txt` from both sides of the reset.
-- The exact ledger JSONL that was written and later loaded.
-- Qdrant point samples or query results showing the correction events existed before the kill.
-- A dated artifact directory with a one-page `PROOF.md` or `NORTH_STAR_RUN.md` that a third party can follow to reproduce the core claim.
-- The watcher log and git diff showing the run happened under protection.
+See the one short [docs/ROADMAP.md](ROADMAP.md) for the frozen rules. In short:
 
-Vibes, internal monitors firing, or "it felt different this time" do not count.
+- Raw `telemetry.jsonl` (with the signals the repetition detector uses) + full stdout/stderr from both sides of the reset.
+- The exact ledger JSONL written during the run (dual-write fidelity with Qdrant when active).
+- Watcher log green + git state.
+- A dated artifact folder with a one-page NORTH_STAR_RUN.md that shows the full sequence on the gamma triage task (or the chosen hard problem) and makes the improvement attributable to the loaded corrections.
+- The runnable math checks (inversion_test.py + repetition strength on real telemetry) pass with clear numbers.
+
+Vibes or "it felt different" do not count. The tests + the dated artifact folder are the evidence.
 
 ---
 

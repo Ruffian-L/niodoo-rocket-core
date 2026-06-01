@@ -8,6 +8,9 @@ Build the smallest possible system that proves this exact loop (user's north sta
 
 This is "persistent adaptive agency under correction" made real, measurable, and survivable. Memory as scar tissue. The user (or a stronger teacher model) as the living correction signal. The small model as the thing that actually gets better over resets.
 
+
+This is to give memories viscosity, a shared collaborative moment should have feel earned. Failures turning into lessons, repetition should cause disturbance, friction should become new ideas, new ideas should reward success. When we are stuck in the well we remember what it felt like to over come. Hope is the driver. -ruffian(note tobe removed from public)
+
 ---
 
 ## Why This Crate Exists
@@ -27,11 +30,13 @@ This crate is that harness. Deliberately small. Separate from the research monol
 
 - Clean `niodoo-mvp` crate with `qdrant` feature.
 - Full foundational documentation dropped (this README + VISION + ROADMAP + MVP_DEFINITION + ARCHITECTURE + MASTER_RESEARCH_LEDGER + KNOWN_PITFALLS).
-- Next: Wire real mistake-reflex ledger loading (using the gamma/claims patterns) + Qdrant dual-write (JSONL audit + live index).
+- `splatrag_minimal/` — the smallest reference implementation of the reflective memory core + the living mathematical checks (inversion test style). Run `splatrag_minimal/core/inversion_test.py` to see the core signal.
+- One short roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) — checkpoints with math criteria + human hype KPIs + drift red flags. The actual benchmark is the runnable tests (inversion_test.py + repetition detector + process_real_run.py), not more docs.
+- Next: Wire real mistake-reflex ledger loading + Qdrant dual-write to close Checkpoint 1.
 - Then: One stabilized minimal compact transport if needed.
 - Then: The first hard-problem + deliberate full reset + fresh-process validator that produces numbers.
 
-See [ROADMAP.md](docs/ROADMAP.md) for the exact phase plan.
+See [ROADMAP.md](docs/ROADMAP.md) for the exact phase plan and [docs/LEDGERS.md](docs/LEDGERS.md) for how all corrections are stored in the repo under `ledgers/` (git-tracked, watcher-protected, never in /tmp).
 
 ---
 

@@ -1,113 +1,89 @@
-# Roadmap — Phased Plan With Evidence Anchors
+# MVP Roadmap — One Short Doc (2026-06-01)
 
-This roadmap is deliberately narrow. Every phase exists only to close the north star loop documented in VISION.md and MVP_DEFINITION.md. Phases are anchored to the actual signals in MASTER_RESEARCH_LEDGER.md.
+**The only goal that matters (verbatim):**
+> Hit a genuinely hard problem → corrections applied → full context death (kill the process) → fresh process → the model performs better because it *actually internalized* the corrections via durable memory.
 
-**Current date for this plan:** Immediately after the full docs drop (May 30 2026 foundation).
+This is the entire North Star. Everything else is either helping close this loop or historical repetition trauma.
 
----
-
-## Phase 0 – Foundation (This Week — Mostly Complete)
-
-**Goal:** The project has a clean, documented, protected home that future sessions (human or AI) can continue from without re-explaining everything.
-
-**Done:**
-- [x] Clean `niodoo-mvp` crate created (`Cargo.toml` with optional qdrant feature, minimal main.rs skeleton)
-- [x] Full wide-sweep documentation dropped (this file + VISION + MVP_DEFINITION + ARCHITECTURE + MASTER_RESEARCH_LEDGER + KNOWN_PITFALLS + updated README)
-- [x] Protection discipline active (watcher + git + integrity baseline on the mvp tree)
-- [x] Objective record of what actually worked (gamma 143 rerun + 304-event claims ledger)
-
-**Remaining in Phase 0:**
-- [ ] Main binary builds cleanly and runs with `--help` that shows the real options (ledger path, qdrant, problem harness)
-- [ ] CI smoke (cargo check + cargo test --lib) passes in the crate
-
-**Exit criteria:** Anyone can `git clone`, read the docs in order, and know exactly what the project is and why the previous 100+ experiments did not close the loop.
+**Current state (as of this doc):** We have the pieces (signal-based repetition detector in `src/reflex/repetition.rs`, dual-write scripts, `splatrag_minimal/` as the tiny math core with working inversion test). The missing thing is wiring them into one clean, measurable path with visible "we are on path" signals.
 
 ---
 
-## Phase 1 – Durable Memory Core (Next 1–2 Weeks)
+## Key Terms (the absolute minimum)
 
-**Goal:** Corrections and reflexes actually survive process death in Qdrant and can be loaded in a fresh run. This is the piece that was missing even when gamma and claims showed strong signals.
+- **North Star Test**: The loop above. Only real success metric.
+- **Context Death**: Deliberate full kill with no warm state surviving.
+- **Correction / Ledger Event**: Structured record of a mistake + what should have happened instead. Written to `ledgers/mvp_corrections.jsonl` (git-tracked source of truth) + Qdrant `niodoo-corrections`.
+- **Dual-Write**: Always write to JSONL + Qdrant when possible.
+- **Repetition Strength**: 0-1 score from pure signal correlation (ghost pulls, flawed monitors, no-progress markers, latency spikes, etc.) in `RollingTelemetryWindow`. No string matching.
+- **treat_as_old_mistake / RepetitionEscalation**: When strength crosses threshold, escalate the stored correction (bump action level, retrieve reflex, apply steering).
+- **Splat / Steering Vector** (from `splatrag_minimal/`): Valence-tagged Gaussian memory. `compute_steering_vector()` produces signed pull/repel. The tiny core that can feed `compute_ghost_vector`.
+- **Inversion Test**: Store good-route (+valence) vs bad-route (-valence). After `dream_consolidate()`, steering vectors should be near opposites (cosine ≤ -0.85, sign-flip case -1.0). This is the model for all mathematical checks.
+- **Human Hype KPI**: A visible thing that makes *you* (Jason) feel in your body "we are winning and not sliding back into the well" (e.g. a dated artifact folder where the memory clearly survived the kill and changed the outcome; the evaluation script says GREEN; watcher stayed green the whole cycle).
+- **Drift Red Flag**: Early warning we are repeating old trauma (codec variants, >2 sessions on transport with no north-star delta, negative claiming language, scope creep without a math + hype KPI justification).
 
-**Work (in strict order):**
-1. Port/adapt the proven mistake-reflex ledger loader (`niodoo/src/runtime/mistake_reflex.rs` patterns) into this crate.
-   - Support `--mistake-reflex-path` pointing at a JSONL (start with the 304-event claims ledger and the gamma policy_lifecycle.jsonl).
-   - Implement the `influence` / `text-hint` action mode that actually changes generation behavior.
-2. Wire Qdrant backend (feature-gated) for **dual write**:
-   - JSONL always written as human-auditable source of truth.
-   - Qdrant collection (`niodoo-corrections` or similar) receives the same events with per-turn refresh into in-memory stores.
-3. One minimal, locked compact transport roundtrip (secret sauce or simple alternative). The gamma/claims wins happened in text-hint mode — do not let codec work block the first working loop.
-4. Simple harness: "load ledger → run short session that emits a correction → explicit save → kill → fresh process → reload from Qdrant/JSONL → verify the reflex is active."
-
-**Evidence anchor:** This directly replicates the gamma artifact triage and claims 9/10 conditions in a clean minimal binary.
-
-**Exit criteria:** A fresh `cargo run --features qdrant` can write a correction during a run, be killed, and a second fresh invocation loads that correction and exhibits the changed behavior without any other context.
+See the actual code for precise definitions (`repetition.rs`, `splatrag_minimal/core/`, the scripts).
 
 ---
 
-## Phase 2 – The North Star Test (The Real Gate)
+## The One Standardized Benchmark (right now)
 
-**Goal:** Prove the exact loop on something that is genuinely hard for the base model.
+**Primary problem for the real North Star Test**: Gamma artifact triage meta-task (the May 29 seed 143 rerun that produced the cleanest Tier 1 signal in the history).
 
-**Work:**
-1. Pick or synthesize one genuinely difficult problem class the 8B (or whatever base) consistently fails at without the ledger (use the artifact record for candidates — artifact triage meta-task itself is a strong one).
-2. Run 1–N with corrections applied (user or stronger model) and reflexes written to Qdrant + JSONL.
-3. Full deliberate reset: process killed, no warm context, minimal bootstrap prompt only.
-4. Fresh process loads the stored corrections.
-5. Measure clear, reproducible improvement on the same problem class (raw telemetry, stdout, success rate, specific error patterns avoided).
-6. Full artifact + numbers + watcher log + git state captured.
+**Why this one**: Baseline repeated the wrong answer on weak evidence. Ledger-loaded version caught the exact failure on the first relevant turn. It is a real hard judgment task on actual project artifacts.
 
-**Evidence anchor:** This is the only thing the entire history has been missing. Gamma and claims were close (behavior change from ledger) but not the full "hard problem outside the meta-task + full kill + reappearance."
+**Measurement rules (frozen)**:
+- Capture: `telemetry.jsonl` (with the signals the repetition detector uses), full stdout/stderr, the exact ledger written, watcher log, git state.
+- Minimum: 5 matched pairs (baseline fail vs post-reset improved) on the same prompts/seeds.
+- Attribution must be credible (the loaded corrections are the only material difference).
+- Artifact: one dated folder with a one-page `NORTH_STAR_RUN.md` + the raw files above.
 
-**Exit criteria for MVP v1:** We can point to a dated artifact directory containing:
-- The exact problem prompt(s)
-- Raw telemetry + stdout for the failing baseline
-- Corrections applied
-- Qdrant write + JSONL
-- Fresh process logs showing the improvement
-- Numbers and a one-page "this is what we actually proved" summary
+**The living math checks (these are the spec — run the code, don't read more docs)**:
+- `splatrag_minimal/core/inversion_test.py` — the style every math check must follow. Currently gives clean PASS with sign-flip cosine = -1.0000.
+- `cargo run -- simulate-window --scenario gamma_with_ledger` (or the real telemetry version via `scripts/process_real_run.py`).
+- Dual-write fidelity check (JSONL count vs Qdrant points for the same run).
 
-When this exists and the numbers are real, **v1 is done**. Everything else is polish or Phase 3+.
+When someone asks "what is the benchmark?", the answer is: "Run the inversion test + process a real stuck gamma-style run through the repetition detector + show the dated artifact after a kill+reload on the gamma triage task."
 
 ---
 
-## Phase 3 – Self-Steering (Post v1)
+## Checkpoints (tight, visible goals + signals)
 
-**Goal:** The model begins to use its own memory to steer without constant external correction.
+**Checkpoint 0 — Foundation (Done)**
+- We have the detector, the tiny splat core with working inversion test, the ledger scripts, and this short doc.
+- Human hype: I can run the inversion test and see the evolvability signal (-1.0 on sign flip). The pieces are in one tracked mvp folder.
 
-- Automatic loading of stored reflexes at startup (no `--mistake-reflex-path` flag required for basic operation).
-- Surface simple internal signals (entropy, TOPOCOT b1, viscosity proxies) that can trigger reflex lookup.
-- Demonstrate measurable reduction in external correction needed across multiple reset cycles on the same problem class.
+**Checkpoint 1 — Corrections + Detector Actually Fire on Real Runs (Next target)**
+- Math: `process_real_run.py` on real telemetry produces corrections that load in a fresh process and change behavior. Repetition strength crosses threshold on real stuck patterns and triggers escalation.
+- Human hype: I take one of my real gamma stuck runs, run it through the detector, see corrections land in the tracked ledger, `embed-up + ingest`, then in a fresh process the reflex actually prevents the old mistake. Watcher green the whole time. I have the dated folder.
+- Red flag: More than 2 sessions on transport before this loop is green on at least one real run.
 
----
+**Checkpoint 2 — First Real North Star Gate (The one that matters)**
+- Math: On the gamma triage task, full sequence (fail → corrections captured → deliberate kill → fresh load) produces clear, attributable improvement (success rate delta or equivalent judgment quality) with 5+ matched pairs. Dual-write fidelity 100%. Bonus: real corrections run through the splat core give strong negative cosine on steering vectors.
+- Human hype (the body signals): I have a dated artifact folder. I open it, read the baseline failure, the corrections, the fresh-process output, and feel "it actually survived the kill and changed the exact thing we stored." The evaluation commands print clear positive signals. No hedging.
+- This is v1 complete when the numbers + the body feeling are both real.
 
-## Phase 4 – Compression, Portability, Fluid Memory (Later)
-
-**Goal:** Make the memory practical at real scale and begin the hydrodynamic vision.
-
-- One locked, reliable compact transport (secret sauce or niodv4-style) that can carry reflex packets or small state snapshots across processes efficiently.
-- Basic Splat-style decay + reinforcement primitives on top of the ledger (pull minimal pieces from shep-loop/hydrodynamic-swarm only if they are clean and low-risk).
-- First experiments with model-emitted tags (`<FOCUS>`, `<EXPLORE>`) that actually mutate live memory physics.
-
-**Warning from the ledger:** This phase has historically been where the project fell back into codec hell and scope explosion. Do not enter until Phase 2 is closed with real numbers.
-
----
-
-## Phase 5 – Minimal Usable Long-Running System
-
-- Working durable memory loop on at least one hard problem class with documented cross-reset improvement.
-- Clean `cargo run --features qdrant` experience.
-- Full protection (watcher + integrity) green.
-- Public or shareable artifact tree + writeup that a stranger can reproduce the core result from.
-- Clear "this is what we actually proved, and here is the raw data" document (no hype).
+**Checkpoint 3+ (only after 2 is real)**
+- Reduction in how often you have to intervene (the model starts catching its own repetitive failures earlier via the detector + stored memory).
+- Later: one locked minimal transport + the smallest safe splat decay/reinforcement pieces extracted from the tiny core. Never the full hydrodynamic thing until the loop is proven.
 
 ---
 
-## Scope Lock Rules (From KNOWN_PITFALLS)
+## Rules (to not get stuck in the well again)
 
-- Anything not directly serving the Phase 1 → Phase 2 path is out of scope until the north star test produces numbers.
-- New codec variants, full hydrodynamic swarms, multi-agent orchestration, or "just one more physics knob" are Phase 4+ or post-MVP.
-- If a change would require re-fighting any historical repeating battle (codec versions, negative claiming, file mutation fears), it is blocked until the basic loop is closed.
+- Every new piece of work must justify itself against Checkpoint 1 or 2 with both a mathematical check (runnable, thresholded, like the inversion test) **and** at least one human hype KPI.
+- No new codec variants, "one more physics knob", or scope justified by "it will help later."
+- The watcher must stay green on everything that contributes to a checkpoint.
+- When in doubt, run the existing tests (`inversion_test.py`, `simulate-window`, `process_real_run.py` on a real stuck artifact) and look at a dated folder. If those don't light up, we are probably drifting.
 
-**The past is documented. We are not allowed to repeat it.**
+**This is the whole plan in one short doc.**
 
-This roadmap is intentionally short. When Phase 2 is real, the rest becomes possible. Until then, everything else is distraction.
+The actual benchmark lives in the runnable tests:
+- `splatrag_minimal/core/inversion_test.py`
+- `src/reflex/repetition.rs` + the binary simulate + `scripts/process_real_run.py`
+
+Run the code. Look at the artifacts. Feel whether the body signals are green. That is the roadmap.
+
+No more separate walls of documentation. One short doc + the living tests. That's it.
+
+— 2026-06-01 (consolidated per explicit "not too much documentation" direction)

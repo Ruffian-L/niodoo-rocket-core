@@ -23,9 +23,9 @@ This is the only architecture that matters until the north star test in MVP_DEFI
 ### 2. Durable Storage Layer (The Missing Piece — Qdrant Dual-Write)
 
 - **Pattern:** Dual write on every correction/reflex event.
-  - JSONL (always): Human-auditable, git-trackable, source of truth.
-  - Qdrant (feature-gated): Fast ANN query + per-turn or per-correction refresh into the in-memory reflex store.
-- **Why dual:** JSONL survives everything and is inspectable. Qdrant makes the memory live and queryable inside the running process without re-parsing the entire history on every turn.
+  - JSONL (always, under `ledgers/`): Human-auditable, git-tracked, repo-protected source of truth. **Never** written to /tmp.
+  - Qdrant (feature-gated, best-effort against your real memory stack on 6360): Fast index + per-turn refresh.
+- **Why dual:** JSONL survives everything, is versioned, and covered by your watcher + integrity system. Qdrant makes the memory live and queryable when the custom stack cooperates.
 - **Existing code:** `niodoo/src/bridge/qdrant_adapter.rs` + ingest scripts + the `grok-memories` collection (25k+ points from prior semantic history runs).
 - **MVP job:** Wire the correction/reflex-specific collection (separate from pure semantic history) with the same dual-write discipline. This is what makes "kill the process, fresh launch reads the corrections" actually work.
 
@@ -68,7 +68,7 @@ This is the only architecture that matters until the north star test in MVP_DEFI
 We consider the MVP successful **only** when we can point to concrete artifacts showing:
 
 - A real problem the base model fails at.
-- Corrections written to Qdrant (dual with JSONL) during the run.
+- Corrections written to the tracked `ledgers/` JSONL (dual with Qdrant when possible) during the run.
 - Full deliberate process kill.
 - Fresh process (minimal context) loading the stored corrections.
 - Clear, reproducible, attributable improvement on the same problem class after the reset.
